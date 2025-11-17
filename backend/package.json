@@ -2,7 +2,6 @@
   "name": "cee-backend",
   "version": "0.4.0",
   "private": true,
-  "type": "module",
   "engines": {
     "node": ">=20"
   },
