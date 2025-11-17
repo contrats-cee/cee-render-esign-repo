@@ -1,7 +1,12 @@
+import { Module } from '@nestjs/common';
+import { CeeService } from './cee.service';
+import { CeeController } from './cee.controller';
+import { PdfModule } from '../pdf/pdf.module';
+import { EsignModule } from '../esign/esign.module';
 
-import { Module } from '@nestjs/common'
-import { CeeService } from './cee.service.js'
-import { CeeController } from './cee.controller.js'
-
-@Module({ providers:[CeeService], controllers:[CeeController] })
+@Module({
+  imports: [PdfModule, EsignModule], // <-- important
+  providers: [CeeService],
+  controllers: [CeeController],
+})
 export class CeeModule {}
