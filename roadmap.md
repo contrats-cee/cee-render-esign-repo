@@ -1,100 +1,86 @@
+# Roadmap – CEE (Render + PDF + e‑signature)
 
-# Roadmap – CEE (OVH Web PaaS + PDF + e‑signature)
-
-Dernière mise à jour : 2025-11-16 00:45
+Dernière mise à jour : 2025-11-12 01:17 (UTC+1)
 
 ## 🎯 Objectifs
-- Déployer un MVP en production sur **OVHcloud Web PaaS (Platform.sh)** avec **PostgreSQL** et **Chrome headless**.
-- Générer des **PDF** (Puppeteer) et envoyer en **signature électronique** (**Yousign v3** recommandé, **DocuSign**/**Universign** en alternative).
-- Évoluer par itérations sans bloquer la rédaction (agents = conseils non bloquants).
-
----
+- Déployer un MVP sur **Render** :
+  - **Backend** Node/NestJS (Web Service)
+  - **Frontend** React/Vite (Static Site via CDN)
+  - **PostgreSQL managé** (Render Postgres)
+- Génération **PDF** via **Puppeteer** (Chrome headless).
+- Envoi **e‑signature** : **Yousign v3** (UE/eIDAS), **DocuSign** ou **Universign**.
 
 ## Phase 1 – Mise en ligne MVP (Semaine 1)
 **Livrables**
-- Backend NestJS opérationnel (endpoints MVP) :
-  - `POST /api/contrats-cee` (brouillon)
-  - `POST /api/contrats-cee/:id/pdf` (PDF Puppeteer)
-  - `POST /api/contrats-cee/:id/esign` (Yousign par défaut)
-- Frontend React affichant un squelette (à étoffer en phase 3).
-- Déploiement **OVH Web PaaS** : `.platform/*` (routes `/` et `/api`), **PostgreSQL**, **chrome‑headless**.
-- CI GitHub Actions (build back/front).
+- Infra via **Blueprint** `render.yaml` : `cee-backend`, `cee-frontend`, `cee-db`.
+- Variables d’environnement définies (JWT, CORS, SMIC, provider e‑signature).
+- Smoke test :
+  - `POST /api/contrats-cee` → crée un brouillon
+  - `POST /api/contrats-cee/:id/pdf` → PDF ok
+  - `POST /api/contrats-cee/:id/esign` → envoi Yousign sandbox
 
 **Actions**
-- Renseigner `.env` (JWT, CORS, SMIC, e‑signature sandbox).
-- Pousser le repo → build & provision auto.
-- Test smoke : création contrat → PDF → envoi e‑signature (sandbox).
+- Lier GitHub → Render (**New → Blueprint**) et **Apply**.
+- Renseigner les **env vars** du backend :
+  - `JWT_SECRET`, `SMIC_JOURNALIER=90.00`, `PIVOT_REMUNERATION=2025-05-01`,
+    `CORS_ORIGINS=https://<front>.onrender.com`,
+    `ESIGN_PROVIDER=yousign`, `YOUSIGN_API_KEY=<clé sandbox>`
+- Ajuster `VITE_API_BASE` côté front vers l’URL du backend `/api`.
 
----
+> Réf. : Déployer un **Web Service** Node (build/start) et un **Static Site** (publish `dist`) ; Postgres managé ; premiers pas Render (création de service, auto‑deploy sur push).  
+> Docs : Render Node/Express Quickstart, Static Sites, Postgres, Your First Deploy.  
 
-## Phase 2 – Moteur de règles CEE & clauses (Semaines 2–3)
+## Phase 2 – Moteur de règles CEE & Clauses (Semaines 2–3)
 **Livrables**
-- Règles **déterministes** (80 jours/12 mois, repos/logement, rémunération min. **4,30× SMIC/j** à compter du **01/05/2025**).
-- **Observations non bloquantes** (Info/Attention/Critique) + journal d’audit.
-- **Clauses Markdown** + gabarit HTML (Handlebars) pour PDF.
+- Règles déterministes : **80 j / 12 mois**, repos (logé/non logé),
+  rémunération mini **4,30× SMIC/j** (applicable au **01/05/2025**).
+- Observations **non bloquantes** (Info/Attention/Critique) + journal d’audit.
+- Clauses **Markdown → HTML → PDF** (gabarit Handlebars).
 
 **Actions**
-- Modéliser schéma Prisma (contrats, signataires, observations, pièces, audit).
-- Brancher conversions Markdown → HTML → PDF.
-- Couvrir cas logé/non logé (repos compensateur) et mentions obligatoires.
+- Modéliser Prisma (contrats, signataires, observations, pièces, audit).
+- Pipeline Markdown → HTML → PDF (Puppeteer).
+- Tests unitaires du moteur de règles.
 
----
-
-## Phase 3 – Front‑end applicatif (Semaines 3–4)
+## Phase 3 – Front applicatif (Semaines 3–4)
 **Livrables**
-- Formulaire complet CEE (rôles animateur/directeur/formateur).
-- Sélecteur d’employeur (multi‑tenant) + tableau de bord contrats.
-- Éditeur de **clauses Markdown** (prévisualisation PDF).
-- **Lexique** consultable.
+- Formulaire complet CEE (animateur/directeur/formateur).
+- Multi‑employeurs (sélection) + tableau de bord contrats.
+- Éditeur de clauses Markdown (prévisualisation PDF) + lexique.
 
 **Actions**
-- State management (React Query/Redux au choix).
-- Upload pièces (S3‑compatible) + calculs auto (jours, repos, rémunération min.).
-
----
+- State management (React Query/Redux).
+- Upload pièces (S3‑compatible) ; calculs auto (jours, repos, minima).
 
 ## Phase 4 – E‑signature PROD & webhooks (Semaines 4–5)
 **Livrables**
-- Passage **production** e‑signature :
-  - **Yousign v3** (UE/eIDAS, RGPD) – clés prod, webhooks statuts.
-  - Option **DocuSign** (OAuth Quickstart) ou **Universign** (Transactions).
-- Archivage **PDF signé** + empreinte **SHA‑256**.
+- Passage production e‑signature :
+  - **Yousign v3** (UE/eIDAS) ou **DocuSign**/**Universign**.
+- Webhooks de statut → MAJ contrat (signé/échoué/expiré).
+- Archivage **PDF signé** + empreinte **SHA‑256** (traçabilité).
 
 **Actions**
-- Mettre en place **webhooks** (callback statuts) → MAJ contrat + relances.
+- Configurer les webhooks (endpoint sécurisé).
 - Journal WORM (immutabilité des événements critiques).
-
----
 
 ## Phase 5 – Qualité, Sécurité & Observabilité (Semaines 5–6)
 **Livrables**
-- Tests **unitaires/intégration** (back/front) + lint/format.
-- Alerting/logs, politiques **backups** & **rétention**.
-- Durcissement CORS, secrets, scopes API e‑signature, rôles/permissions.
+- Tests **unitaires/IT**, lint/format, CI GitHub Actions.
+- Stratégies **backups/rétention** DB, durcissement CORS/secrets/scopes.
+- RBAC / rôles & permissions.
 
 **Actions**
-- Pipeline CI : tests + build + déploiement auto (gated by status).
-- Plan de sauvegarde et politique de purge/anonymisation (RGPD).
-
----
+- Pipeline : tests → build → déploiement Render “auto‑deploy on push”.
+- Plan de purge/anonymisation (RGPD).
 
 ## Backlog (à prioriser)
-- Programme indicatif (calendrier drag&drop) + annexe repos.
-- Export pack dossier (PDF signé + rapport conformité + JSON d’audit).
-- Multi‑signataires (ordre, relances, escalades) + modèles d’envoi.
-- Traductions (FR → EN), accessibilité (a11y).
+- Calendrier/annexes repos, export “pack dossier” (PDF signé + rapport + JSON audit).
+- Multi‑signataires (ordre, relances), modèles d’envoi.
+- Internationalisation (FR/EN), accessibilité (a11y).
 
----
-
-## Gouvernance & cadence
-- **Rituels** : point hebdo 30 min, revue de sprint, backlog grooming.
-- **Livraisons** : fin de phase = lot testable en sandbox + check RGPD.
-
----
-
-## Références (cadrage technique)
-- **OVH Web PaaS (Platform.sh)** : Node.js, CI/CD, RGPD/Gaia‑X, services managés.
-- **Puppeteer** : téléchargement Chromium, config via fichier/env, PDF headless.
-- **Yousign v3** : API UE/eIDAS + sandbox + Postman officiel.
-- **DocuSign** : `createEnvelope`, Quickstart OAuth.
-- **Universign** : Transactions (documents, champs, signers).
+## Références (Render & outils)
+- **Your First Deploy** : création d’un **Web Service** / **Static Site**, auto‑deploy sur push.
+- **Node/Express sur Render** : build/start, PORT dynamique.
+- **Static Sites** : build `dist`, CDN mondial, rewrites/redirects.
+- **Render Postgres** : DB managée (backups, HA, extensions).
+- **Puppeteer headless** sur Render : déploiement et cache binaire Chrome.
