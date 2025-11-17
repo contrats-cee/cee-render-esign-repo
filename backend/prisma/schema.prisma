@@ -1,0 +1,5 @@
+
+// Prisma schema - minimal to get started
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+model ContratCEE { id String @id @default(cuid()) createdAt DateTime @default(now()) updatedAt DateTime @updatedAt organisateurId String? salarieNom String salariePrenom String dateDebut DateTime dateFin DateTime logeSurPlace Boolean @default(false) remunerationJour Decimal @db.Decimal(10,2) joursPrevus Int }
